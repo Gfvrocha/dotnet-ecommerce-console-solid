@@ -10,12 +10,14 @@ namespace ecommerce.servicos
         public static void Salvar<T>(string colunas, string arquivo, List<T> lista)
         {
             var linhas = colunas + "\n";
-            foreach (var obj in lista)
-            {
-                var iObject = (IObject)obj;
+            foreach (var obj in lista){
+                var colunasObj = "";
+                foreach (var p in obj.GetType().GetProperties()){
+                    colunasObj += p.GetValue(obj) + ";";
+                }
 
-                linhas += $"{iObject.Id}/n";
-                //linhas += $"{obj.Id};{obj.Nome};{obj.Email};{obj.Telefone};{obj.EnderecoCompleto}/n";
+                linhas += $"{colunasObj}/n";
+             
             }
 
             File.WriteAllText(arquivo, linhas);
@@ -36,11 +38,20 @@ namespace ecommerce.servicos
                 var coluns = line.Split(';');
                 if (coluns[0].Trim().ToLower() == "Id" || coluns[0].Trim().ToLower() == "") continue;
 
-                var obj = (IObject)Activator.CreateInstance(typeof(T));
-                obj.Id = int.Parse(coluns[0]);
+                var obj = Activator.CreateInstance(typeof(T));
+                var i = 0;
+                foreach (var p in obj.GetType().GetProperties()){
+                    if(p.PropertyType == typeof(int)){
+                        p.SetValue(obj, int.Parse(coluns[i]));
+
+                    }
+                    else{
+                         p.SetValue(obj, coluns[i]);
+                    }
+                    i++;
+                }                
 
                 lista.Add((T)obj);
-
             }
             return lista;
 
